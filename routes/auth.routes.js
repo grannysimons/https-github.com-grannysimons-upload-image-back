@@ -19,11 +19,19 @@ const { isAuthenticated } = require("../middleware/jwt.middleware.js");
 const saltRounds = 10;
 
 // POST /auth/signup  - Creates a new user in the database
-router.post("/signup", (req, res, next) => {
-  const { email, password, name, imageUrl } = req.body;
+router.post("/signup", fileUploader.single('image'), (req, res, next) => {
+  //if there was an image file uploaded in cloudinary, extracts the path so that it can be stored in the database
+  let imageUrl = '';
+  if (req.file) {
+      imageUrl = req.file.path;
+  }
+  
+  // Get the URL of the uploaded file and send it as a response.
+  
+  const { email, password, name } = req.body;
 
   // Check if email or password or name are provided as empty strings
-  if (email === "" || password === "" || name === "") {
+  if (email === "" || password === "" ) {
     res.status(400).json({ message: "Provide email, password and name" });
     return;
   }
@@ -60,7 +68,7 @@ router.post("/signup", (req, res, next) => {
 
       // Create the new user in the database
       // We return a pending promise, which allows us to chain another `then`
-      return User.create({ email, password: hashedPassword, name , imageUrl});
+      return User.create({ email, password: hashedPassword , imageUrl, name});
     })
     .then((createdUser) => {
       // Deconstruct the newly created user object to omit the password
